@@ -1,9 +1,10 @@
-package main
+package analytics
 
 import (
-  "fmt"
+  "text/template"
   "encoding/json"
   "net/http"
+  "log"
   "menteslibres.net/gosexy/redis"
 )
 
@@ -17,21 +18,29 @@ func redisConnect(host string, port uint)(error) {
   return err
 }
 
+func redisStore(value string) {
+  client.LPush(redisKey, value)
+}
+
 func jsHandler(w http.ResponseWriter, r *http.Request) {
   serializedRequest, serializeError := json.Marshal(r)
 
   if serializeError != nil {
-    fmt.Printf("Error: %s", serializeError.Error())
     http.Error(w, serializeError.Error(), http.StatusInternalServerError)
+    return
   }
 
-  client.LPush(redisKey, serializedRequest)
-  return
+  redisStore(string(serializedRequest))
+  w.Header().Set("Content-Type", "application/javascript")
+  w.WriteHeader(http.StatusCreated)
+
+  t, _ := template.ParseFiles("templates/analytics.js")
+  t.Execute(w, nil)
 }
 
 func main() {
   redisConnect("localhost", 6379)
   http.HandleFunc("/analytics.js", jsHandler)
-  http.ListenAndServe(":8080", nil)
+  log.Fatal(http.ListenAndServe(":8080", nil))
   client.Quit()
 }
