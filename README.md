@@ -1,6 +1,8 @@
 go-analytics
 ============
 
+[![Build Status](https://travis-ci.org/joshmcarthur/go-analytics.png?branch=master)](https://travis-ci.org/joshmcarthur/go-analytics)
+
 A badly written (probably) and ridiculously simple Go HTTP script to take an incoming request and persist it in Redis for deriving useful information from later.
 
 ### Running:
